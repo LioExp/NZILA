@@ -37,8 +37,8 @@ export function AppSidebar() {
     <Sidebar className="border-r border-border/50 bg-card">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3 px-2 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg glow-red">
-            <span className="text-white font-display font-bold text-lg">N</span>
+          <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg">
+            <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
           </div>
           <div>
             <h2 className="font-display font-bold text-xl tracking-tight text-foreground">Nzila</h2>

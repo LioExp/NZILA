@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, Bot, User, CornerDownLeft } from "lucide-react";
+import { Send, Sparkles, User, CornerDownLeft } from "lucide-react";
 import { useSendChatMessage } from "@workspace/api-client-react";
 import { useUserId } from "@/hooks/use-user";
 import { useChatStore, type ChatMessage } from "@/hooks/use-chat-history";
@@ -111,8 +111,8 @@ export default function Chat() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-orange-600 rounded-2xl flex items-center justify-center shadow-2xl glow-red mb-4">
-                <Bot className="w-10 h-10 text-white" />
+              <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl mb-4">
+                <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
               </div>
               <h2 className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                 Olá kamba!<br/>Como posso ajudar?
@@ -132,12 +132,15 @@ export default function Chat() {
                   className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
                   {/* Avatar */}
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md overflow-hidden ${
                     msg.role === 'user' 
                       ? 'bg-secondary text-secondary-foreground' 
-                      : 'bg-gradient-to-br from-primary to-red-600 text-white'
+                      : ''
                   }`}>
-                    {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+                    {msg.role === 'user' 
+                      ? <User className="w-5 h-5" /> 
+                      : <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
+                    }
                   </div>
 
                   {/* Message Bubble */}
@@ -181,8 +184,8 @@ export default function Chat() {
               animate={{ opacity: 1 }}
               className="flex gap-4 flex-row"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-red-600 text-white flex items-center justify-center shrink-0 shadow-md">
-                <Bot className="w-5 h-5 animate-pulse" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-md">
+                <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
               </div>
               <div className="bg-card border border-border/50 rounded-2xl rounded-tl-sm px-6 py-5 flex items-center gap-2 h-[56px]">
                 <div className="flex gap-1.5">
