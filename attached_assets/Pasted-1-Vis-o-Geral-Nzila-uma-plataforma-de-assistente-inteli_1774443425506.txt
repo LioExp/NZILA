@@ -1,0 +1,266 @@
+1. Visão Geral
+
+Nzila é uma plataforma de assistente inteligente focada no contexto angolano, que combina:
+
+    Um dataset proprietário de calão, línguas nacionais (Kimbundu, Umbundu, Kikongo), perguntas escolares e diálogos reais.
+
+    Um sistema de ranking de utilizadores que permite aprendizado contínuo com moderação inteligente.
+
+    Uma stack limpa e acessível: frontend em HTML/CSS/JS puro (deploy Vercel) e backend em Python + FastAPI (deploy Render).
+
+Diferencial: não são as APIs de IA (Gemini/Groq), mas sim a curadoria de dados locais e o mecanismo de contribuição da comunidade.
+
+MVP inicial: um chat demo que demonstra superioridade no tratamento de gírias angolanas, com interface inspirada nos principais assistentes do mercado (ChatGPT, Claude.ai, DeepSeek) e identidade visual baseada nas cores da bandeira de Angola (preto, vermelho, amarelo).
+2. Objetivos
+Objetivo	Descrição
+Validar diferencial cultural	Demonstrar que a Nzila responde melhor que modelos generalistas (ChatGPT, Gemini) em perguntas que envolvem calão angolano.
+Construir dataset próprio	Criar um repositório de dados angolanos estruturado, limpo e validado via scripts Python.
+Implementar sistema de ranking	Classificar utilizadores como Confiável, Nenhum, Moderado ou Horrível para controlar a integração de novas contribuições.
+Entregar MVP de chat demo	Lançar um chat acessível via web, focado em gírias angolanas, com interface moderna e identidade visual própria.
+Apresentação impecável	Gerar uma apresentação (slides + discurso) que comunique os 4 pilares: dados angolanos, gírias/línguas nacionais, ranking colaborativo e visão de futuro.
+3. Escopo
+3.1 Funcionalidades obrigatórias (MVP)
+
+    Interface de chat inspirada em ChatGPT + Claude.ai (layout limpo, balões de mensagens, área de input com botão de envio, indicador de digitação).
+
+    Paleta de cores: preto, vermelho, amarelo (bandeira de Angola) – aplicar em fundos, acentos, botões e hover.
+
+    Endpoint /chat que recebe mensagens e retorna respostas com ênfase em gírias angolanas.
+
+    Demo focada em gírias: pelo menos 5 exemplos pré-carregados (sugestões na interface) que evidenciam a superioridade da Nzila.
+
+    Sistema de autenticação básica (anonimato com identificador persistente via localStorage ou sessão).
+
+    Mecanismo de contribuição simples: utilizador pode sugerir nova gíria/expressão, que entra na fila de acordo com seu ranking (implementação inicial pode ser síncrona com moderação manual via backend).
+
+    Scripts de validação de dados (Python) que limpam e estruturam os datasets antes de uso.
+
+    Documentação do deploy (Vercel + Render).
+
+3.2 Funcionalidades futuras (pós-MVP)
+
+    Aplicativo móvel (React Native ou Flutter).
+
+    Expansão do dataset com parcerias escolares e instituições culturais.
+
+    Dashboard de moderação para gestão manual de contribuições.
+
+    Benchmark automatizado comparando Nzila com outros modelos.
+
+    Suporte completo a línguas nacionais (Kimbundu, Umbundu, Kikongo) no chat.
+
+4. Requisitos Funcionais
+RF01 – Chat contextual com ênfase em gírias
+
+    O sistema deve receber uma mensagem do utilizador e retornar uma resposta.
+
+    A resposta deve priorizar o dataset de gírias angolanas quando houver correspondência.
+
+    Se não houver correspondência, recorrer a uma API de IA (Gemini ou Groq) com prompt que contextualize Angola e, se possível, utilize o dataset como referência.
+
+    A interface deve permitir ao utilizador escolher entre exemplos de gírias pré-definidos para demonstrar o diferencial.
+
+RF02 – Sistema de ranking
+
+    Cada utilizador (identificado por um ID único) possui um nível: Confiável, Nenhum, Moderado, Horrível.
+
+    O nível é calculado com base em:
+
+        Número de contribuições aprovadas.
+
+        Flag de conteúdo ofensivo/spam (detectado automaticamente ou via moderação).
+
+    A classificação influencia o fluxo de novas contribuições conforme tabela:
+
+Nível	Impacto na contribuição
+Confiável	Integração automática após validação por script
+Nenhum	Entra em fila de moderação manual
+Moderado	Pré-validação por script + revisão rápida
+Horrível	Contribuições bloqueadas, utilizador notificado
+RF03 – Contribuição de dados
+
+    Utilizador pode submeter uma nova gíria, expressão ou pergunta com resposta esperada.
+
+    O sistema valida o conteúdo (ofensividade, duplicatas) e, conforme ranking, decide se integra automaticamente ou entra em moderação.
+
+RF04 – Exibição de benchmark e dados
+
+    O frontend deve disponibilizar uma secção (ou slide embutido) mostrando gráficos comparativos entre Nzila, ChatGPT e Gemini em perguntas típicas angolanas.
+
+    Deve haver exemplos visuais de gírias e línguas nacionais com respostas corretas.
+
+5. Requisitos Não Funcionais
+Categoria	Descrição
+Desempenho	Respostas do chat devem ocorrer em menos de 3 segundos (incluindo chamadas externas).
+Escalabilidade	Arquitetura separada (frontend/backend) permite escalar cada camada independentemente.
+Segurança	Variáveis de ambiente (.env) para chaves de API; CORS configurado para aceitar apenas o domínio do frontend.
+Manutenibilidade	Separação clara de responsabilidades: api.js, ui.js, chat.js; backend com rotas, serviços e modelos separados.
+Disponibilidade	Backend no Render com auto-start; frontend estático na Vercel com elevada disponibilidade.
+Acessibilidade	Contraste adequado entre cores (preto, vermelho, amarelo) para garantir legibilidade.
+6. Stack Tecnológica
+Camada	Tecnologia	Deploy
+Frontend	HTML5, CSS3, JavaScript (ES6+) – inspirado em ChatGPT/Claude.ai	Vercel
+Estilos	CSS customizado com variáveis para as cores da bandeira	–
+Backend	Python 3.10+, FastAPI, Uvicorn	Render
+Dados	JSON (datasets), Python (scripts de validação)	Repositório Git
+IA Complementar	Gemini API ou Groq (via env)	–
+Controlo de versão	Git + GitHub	–
+7. Identidade Visual e Interface
+7.1 Cores
+
+    Preto (#000000 ou #1a1a1a) – fundo principal, cabeçalho.
+
+    Vermelho (#D52B1E ou #C8102E) – acentos, botões primários, hover, indicadores.
+
+    Amarelo (#FFCD00 ou #F3A800) – detalhes, ícones, destaques.
+
+7.2 Layout e Componentes
+
+    Layout geral: semelhante ao ChatGPT: barra lateral (opcional no MVP), área central de mensagens, input fixo na parte inferior.
+
+    Balões de mensagens: usuário à direita (fundo preto com texto branco), assistente à esquerda (fundo cinza claro com texto escuro, detalhes em vermelho/amarelo).
+
+    Input de texto: campo com borda arredondada, botão de enviar com fundo vermelho e ícone amarelo.
+
+    Sugestões de gírias: chips clicáveis logo acima do input, com exemplos como “Kamba, bora ali?”, “Tá fixe”, “Bue fixe”, “Kota”, “Muita pinta”.
+
+    Indicador de digitação: animação com pontos nas cores vermelho e amarelo.
+
+7.3 Inspirações
+
+    ChatGPT: simplicidade, área de chat central, input fixo.
+
+    Claude.ai: uso de cores suaves com detalhes vibrantes, microinterações.
+
+    DeepSeek: layout minimalista, ênfase na velocidade.
+
+8. Arquitetura de Alto Nível
+text
+
+[Utilizador] <--> [Frontend Vercel]
+                      |
+                      v
+[Backend Render] <--> [APIs IA (Gemini/Groq)]
+                      |
+                      v
+[Dataset JSON] <--> [Scripts de Validação]
+                      |
+                      v
+[Sistema de Ranking] --> [Contribuições]
+
+Estrutura de pastas (já definida):
+text
+
+nzila/
+├── frontend/
+│   ├── index.html
+│   ├── styles/
+│   │   ├── base.css        (reset, variáveis de cor, tipografia)
+│   │   ├── chat.css        (estilos específicos do chat)
+│   │   └── components.css  (balões, input, chips)
+│   └── scripts/
+│       ├── api.js          (só chamadas HTTP)
+│       ├── ui.js           (só manipulação do DOM)
+│       └── chat.js         (orquestra api.js + ui.js)
+├── backend/
+│   ├── main.py
+│   ├── routes/
+│   │   ├── chat.py
+│   │   └── ranking.py
+│   ├── services/
+│   │   ├── nzila.py        (lógica de resposta, prioridade para gírias)
+│   │   └── dataset.py      (leitura/escrita de JSONs)
+│   ├── models/
+│   │   ├── user.py
+│   │   └── message.py
+│   └── requirements.txt
+├── dataset/
+│   ├── data/
+│   │   ├── girias.json
+│   │   └── kimbundu.json   (para futuras expansões)
+│   └── scripts/
+│       └── validate.py
+├── .env
+└── README.md
+
+Regra de ouro:
+
+    api.js → só chamadas HTTP.
+
+    ui.js → só manipulação de DOM.
+
+    chat.js → orquestra os dois.
+
+9. Fluxos de Utilizador
+Fluxo Principal – Conversar com gírias
+
+    Utilizador acede ao site. Visualiza interface com sugestões de gírias.
+
+    Digita uma mensagem ou clica num chip de exemplo (ex: “Kamba, bora ali?”).
+
+    Frontend envia para /chat com ID anónimo.
+
+    Backend consulta dataset de gírias; se encontrar correspondência, retorna resposta local (ex: explicação da gíria + contexto cultural).
+
+    Caso contrário, chama API de IA com prompt que inclui o dataset angolano como referência.
+
+    Resposta é exibida no chat, com animação de digitação.
+
+Fluxo de Contribuição
+
+    Utilizador clica em “Contribuir” (ícone ou botão) e envia uma gíria/expressão.
+
+    Frontend chama /ranking para obter nível do utilizador.
+
+    Backend valida conteúdo (ofensividade, duplicados).
+
+    Com base no ranking, decide:
+
+        Confiável → integração automática.
+
+        Nenhum/Moderado → armazena em fila de moderação.
+
+        Horrível → bloqueia e notifica.
+
+    Utilizador vê mensagem de agradecimento ou aviso.
+
+10. Critérios de Aceitação
+ID	Critério
+CA-01	O chat responde corretamente a pelo menos 5 gírias definidas no dataset (ex: “Kamba, bora ali?”, “Tá fixe”, “Bue fixe”, “Kota”, “Muita pinta”).
+CA-02	A interface utiliza as cores preto, vermelho e amarelo de forma consistente (botões, hover, indicadores).
+CA-03	Existem chips clicáveis com exemplos de gírias que preenchem automaticamente o input.
+CA-04	O sistema de ranking classifica corretamente um utilizador após contribuições.
+CA-05	Contribuições de utilizadores Horríveis são rejeitadas.
+CA-06	Frontend e backend comunicam via CORS sem erros em produção.
+CA-07	Todos os scripts de validação rodam sem erros sobre os datasets iniciais.
+CA-08	O slide final da apresentação contém os 4 pilares e frase de efeito.
+CA-09	Existe pelo menos um gráfico comparativo (benchmark) mostrando superioridade da Nzila em contexto angolano.
+11. Próximos Passos (pós-PRD)
+
+    Setup do repositório – criar estrutura de pastas e configurar ambientes.
+
+    Dataset inicial de gírias – recolher pelo menos 10 gírias angolanas com definições e exemplos.
+
+    Backend mínimo – implementar /chat que retorna respostas do dataset + fallback IA.
+
+    Frontend com identidade visual – construir interface inspirada nos concorrentes, aplicando cores preto/vermelho/amarelo.
+
+    Sistema de ranking – implementar lógica de classificação e endpoints.
+
+    Scripts de validação – garantir que os dados estão limpos.
+
+    Apresentação – gerar slides e discurso com base nos 4 pilares e foco em gírias.
+
+    Deploy – Vercel + Render + variáveis de ambiente.
+
+    Testes de aceitação – validar cada critério.
+
+12. Considerações Finais (para a apresentação)
+
+    Inovação: dataset próprio + benchmark + ranking inteligente.
+
+    Impacto cultural: valorização do calão angolano e, no futuro, línguas nacionais.
+
+    Sustentabilidade: comunidade contribui com qualidade graças ao ranking.
+
+    Frase de encerramento: “Nzila: um caminho construído por todos nós.”

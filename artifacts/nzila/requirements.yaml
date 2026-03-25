@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For smooth page transitions and chat message animations"
+  "recharts": "For the benchmark comparison charts"
+  "uuid": "To generate and persist anonymous user IDs"
+  "date-fns": "For formatting conversation timestamps"
+  "@hookform/resolvers": "For form validation with zod"
+  "clsx": "For class merging utility"
+  "tailwind-merge": "For class merging utility"
+
+images:
+  - path: "artifacts/nzila/public/images/nzila-pattern.png"
+    description: "Abstract geometric pattern inspired by Angolan Samakaka textiles, dark background with subtle red and yellow line art accents, very minimal and elegant"
+    aspect_ratio: "16:9"
+
+notes:
+  - Using the provided api-client-react hooks for all data fetching.
+  - Chat streaming is not required as per instructions, using POST /api/chat.
+  - Using wouter for routing.
+  - Dark mode is the primary theme (black, red, yellow).

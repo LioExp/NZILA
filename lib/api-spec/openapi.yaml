@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Nzila API - Angolan AI Assistant
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: chat
+    description: Nzila chat operations
+  - name: contributions
+    description: User contribution operations
+  - name: ranking
+    description: User ranking operations
+  - name: openai
+    description: OpenAI AI chat operations
 paths:
   /healthz:
     get:
@@ -24,6 +32,216 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /chat:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a chat message to Nzila
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+      responses:
+        "200":
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /girias:
+    get:
+      operationId: listGirias
+      tags: [chat]
+      summary: List all gírias (Angolan slang) in the dataset
+      responses:
+        "200":
+          description: List of gírias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Giria"
+
+  /contributions:
+    get:
+      operationId: listContributions
+      tags: [contributions]
+      summary: List pending contributions
+      responses:
+        "200":
+          description: List of contributions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contribution"
+    post:
+      operationId: createContribution
+      tags: [contributions]
+      summary: Submit a new gíria or expression contribution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContributionBody"
+      responses:
+        "201":
+          description: Contribution submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContributionResult"
+        "403":
+          description: User blocked (Horrível ranking)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /ranking/{userId}:
+    get:
+      operationId: getUserRanking
+      tags: [ranking]
+      summary: Get user ranking and stats
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User ranking info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserRanking"
+
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpenaiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +252,221 @@ components:
       required:
         - status
 
+    ChatRequest:
+      type: object
+      properties:
+        message:
+          type: string
+        userId:
+          type: string
+        conversationId:
+          type: ["integer", "null"]
+      required:
+        - message
+        - userId
+
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        source:
+          type: string
+          description: "dataset | ai"
+        matchedGiria:
+          type: ["string", "null"]
+        conversationId:
+          type: integer
+      required:
+        - response
+        - source
+        - conversationId
+
+    Giria:
+      type: object
+      properties:
+        id:
+          type: integer
+        term:
+          type: string
+        definition:
+          type: string
+        example:
+          type: string
+        culturalContext:
+          type: string
+        category:
+          type: string
+      required:
+        - id
+        - term
+        - definition
+        - example
+        - culturalContext
+        - category
+
+    Contribution:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        term:
+          type: string
+        definition:
+          type: string
+        example:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - term
+        - definition
+        - example
+        - status
+        - createdAt
+
+    CreateContributionBody:
+      type: object
+      properties:
+        userId:
+          type: string
+        term:
+          type: string
+        definition:
+          type: string
+        example:
+          type: string
+      required:
+        - userId
+        - term
+        - definition
+        - example
+
+    ContributionResult:
+      type: object
+      properties:
+        message:
+          type: string
+        status:
+          type: string
+        contributionId:
+          type: ["integer", "null"]
+      required:
+        - message
+        - status
+
+    UserRanking:
+      type: object
+      properties:
+        userId:
+          type: string
+        level:
+          type: string
+          description: "Confiável | Nenhum | Moderado | Horrível"
+        approvedContributions:
+          type: integer
+        totalContributions:
+          type: integer
+        isBlocked:
+          type: boolean
+      required:
+        - userId
+        - level
+        - approvedContributions
+        - totalContributions
+        - isBlocked
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+
+    CreateOpenaiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+
+    SendOpenaiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
