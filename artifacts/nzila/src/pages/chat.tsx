@@ -111,7 +111,7 @@ export default function Chat() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"
             >
-              <div className="w-20 h-20 mb-4">
+              <div className="w-40 h-40 mb-4">
                 <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain drop-shadow-2xl" />
               </div>
               <h2 className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
