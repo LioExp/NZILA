@@ -111,8 +111,8 @@ export default function Chat() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6"
             >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl mb-4">
-                <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
+              <div className="w-20 h-20 mb-4">
+                <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain drop-shadow-2xl" />
               </div>
               <h2 className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
                 Olá kamba!<br/>Como posso ajudar?
@@ -139,7 +139,7 @@ export default function Chat() {
                   }`}>
                     {msg.role === 'user' 
                       ? <User className="w-5 h-5" /> 
-                      : <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
+                      : <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain p-1" />
                     }
                   </div>
 
@@ -184,8 +184,8 @@ export default function Chat() {
               animate={{ opacity: 1 }}
               className="flex gap-4 flex-row"
             >
-              <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 shadow-md">
-                <img src="/nzila-logo.jpg" alt="Nzila" className="w-full h-full object-cover" />
+              <div className="w-10 h-10 rounded-xl shrink-0 shadow-md flex items-center justify-center">
+                <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain p-1" />
               </div>
               <div className="bg-card border border-border/50 rounded-2xl rounded-tl-sm px-6 py-5 flex items-center gap-2 h-[56px]">
                 <div className="flex gap-1.5">
