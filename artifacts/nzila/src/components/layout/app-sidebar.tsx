@@ -1,4 +1,4 @@
-import { BookOpen, MessageSquare, PenTool, BarChart2, PlusCircle, History, LogOut } from "lucide-react";
+import { BookOpen, MessageSquare, PenTool, BarChart2, PlusCircle, History, LogOut, ChevronRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useChatStore } from "@/hooks/use-chat-history";
@@ -18,21 +18,24 @@ import {
 } from "@/components/ui/sidebar";
 import { format } from "date-fns";
 
-const mainNav = [
-  { title: "Chat", url: "/", icon: MessageSquare },
-  { title: "Gírias", url: "/girias", icon: BookOpen },
-  { title: "Contribuir", url: "/contribuir", icon: PenTool },
-  { title: "Benchmark", url: "/benchmark", icon: BarChart2 },
-];
-
 interface AppSidebarProps {
   user?: AuthUser | null;
+  isAngolan: boolean | null;
 }
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
   const [location, setLocation] = useLocation();
   const { data: conversations } = useListOpenaiConversations();
   const { clearMessages } = useChatStore();
+
+  const allNavItems = [
+    { title: "Chat", url: "/", icon: MessageSquare, angolanOnly: false },
+    { title: "Dicionário", url: "/girias", icon: BookOpen, angolanOnly: false },
+    { title: "Contribuir", url: "/contribuir", icon: PenTool, angolanOnly: true },
+    { title: "Benchmark", url: "/benchmark", icon: BarChart2, angolanOnly: false },
+  ];
+
+  const navItems = allNavItems.filter((item) => !item.angolanOnly || isAngolan === true);
 
   const handleNewChat = () => {
     clearMessages();
@@ -44,46 +47,50 @@ export function AppSidebar({ user }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="border-r border-border/50 bg-card">
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3 px-2 mb-4">
-          <div className="w-8 h-8 rounded-lg shadow-lg flex items-center justify-center">
+    <Sidebar className="border-r border-border/40 bg-sidebar">
+      <SidebarHeader className="p-4 pb-3">
+        <div className="flex items-center gap-2.5 px-1 mb-4">
+          <div className="w-7 h-7 shrink-0">
             <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h2 className="font-display font-bold text-xl tracking-tight text-foreground">Nzila</h2>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Assistente Angolano</p>
+            <h2 className="font-semibold text-lg text-foreground" style={{ letterSpacing: "-0.02em" }}>Nzila</h2>
           </div>
         </div>
         <button
           onClick={handleNewChat}
-          className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 text-foreground border border-white/10 transition-all px-4 py-2.5 rounded-xl font-medium text-sm group"
+          className="w-full flex items-center gap-2 bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 transition-all px-3 py-2.5 rounded-lg text-sm font-medium"
         >
-          <PlusCircle className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+          <PlusCircle className="w-3.5 h-3.5" />
           Nova Conversa
         </button>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-3">
+            Navegação
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.map((item) => {
+            <SidebarMenu className="space-y-0.5 px-2">
+              {navItems.map((item) => {
                 const isActive = location === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       isActive={isActive}
-                      className={`
-                        transition-all duration-200 rounded-xl my-0.5
-                        ${isActive ? 'bg-primary/10 text-primary hover:bg-primary/15' : 'hover:bg-white/5 text-muted-foreground hover:text-foreground'}
-                      `}
+                      className={`rounded-lg transition-all duration-150 ${
+                        isActive
+                          ? "bg-primary/10 text-primary hover:bg-primary/12"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      }`}
                     >
-                      <Link href={item.url} className="flex items-center gap-3 py-5">
-                        <item.icon className={`w-5 h-5 ${isActive ? 'text-primary' : ''}`} />
-                        <span className="font-medium text-base">{item.title}</span>
+                      <Link href={item.url} className="flex items-center gap-3 px-3 py-2.5">
+                        <item.icon className="w-4 h-4 shrink-0" strokeWidth={isActive ? 2 : 1.75} />
+                        <span className={`text-sm ${isActive ? "font-semibold" : "font-medium"}`}>
+                          {item.title}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -93,66 +100,71 @@ export function AppSidebar({ user }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarSeparator className="my-2 bg-border/50 mx-4" />
+        <SidebarSeparator className="my-3 bg-border/40 mx-3" />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 flex items-center gap-2">
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 px-3 flex items-center gap-1.5">
             <History className="w-3 h-3" />
             Histórico
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-0.5">
               {conversations?.slice(0, 8).map((conv) => (
                 <SidebarMenuItem key={conv.id}>
-                  <SidebarMenuButton asChild className="hover:bg-white/5 rounded-lg py-4 text-muted-foreground hover:text-foreground transition-colors">
-                    <button onClick={() => {}} className="flex flex-col items-start gap-1 w-full text-left">
-                      <span className="truncate w-full font-medium text-sm">{conv.title || "Nova Conversa"}</span>
-                      <span className="text-[10px] text-muted-foreground/60">
-                        {format(new Date(conv.createdAt), "dd MMM, HH:mm")}
-                      </span>
+                  <SidebarMenuButton
+                    asChild
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors"
+                  >
+                    <button className="flex items-center gap-2.5 px-3 py-2 w-full text-left">
+                      <ChevronRight className="w-3 h-3 shrink-0 opacity-40" />
+                      <div className="min-w-0 flex-1">
+                        <span className="truncate block text-xs font-medium">
+                          {conv.title || "Conversa"}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/50">
+                          {format(new Date(conv.createdAt), "dd MMM")}
+                        </span>
+                      </div>
                     </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
               {(!conversations || conversations.length === 0) && (
-                <div className="px-4 py-3 text-sm text-muted-foreground/50 text-center">
-                  Nenhuma conversa ainda
-                </div>
+                <p className="px-3 py-2 text-xs text-muted-foreground/40">Nenhuma conversa</p>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* User profile footer */}
       {user && (
-        <SidebarFooter className="p-4 border-t border-border/40">
-          <div className="flex items-center gap-3">
+        <SidebarFooter className="p-3 border-t border-border/30">
+          <div className="flex items-center gap-2.5 px-1">
             {user.profileImageUrl ? (
               <img
                 src={user.profileImageUrl}
-                alt={user.firstName ?? "User"}
-                className="w-8 h-8 rounded-full object-cover shrink-0"
+                alt={user.firstName ?? ""}
+                className="w-7 h-7 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                <span className="text-primary font-bold text-sm">
+              <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <span className="text-primary font-bold text-xs">
                   {(user.firstName?.[0] ?? "U").toUpperCase()}
                 </span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-xs font-semibold text-foreground truncate">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+              <p className="text-[10px] text-muted-foreground/60 truncate">{user.email}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
-              title="Sair"
+              className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              title="Terminar sessão"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </SidebarFooter>
