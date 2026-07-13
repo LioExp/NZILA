@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, User, CornerDownLeft, Menu } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useSendChatMessage } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/contexts/profile-context";
@@ -15,6 +17,44 @@ const SUGGESTIONS = [
   "Conta-me sobre Angola",
   "O que é Kandonga?",
 ];
+
+function MessageContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+        strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
+        em: ({ children }) => <em className="italic text-foreground/90">{children}</em>,
+        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
+        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+        h1: ({ children }) => <h1 className="text-base font-semibold mb-1 mt-2">{children}</h1>,
+        h2: ({ children }) => <h2 className="text-sm font-semibold mb-1 mt-2">{children}</h2>,
+        h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 mt-1">{children}</h3>,
+        code: ({ children, className }) => {
+          const isBlock = className?.includes("language-");
+          return isBlock ? (
+            <code className="block bg-muted/60 rounded-lg px-3 py-2 text-xs font-mono my-2 overflow-x-auto">{children}</code>
+          ) : (
+            <code className="bg-muted/60 rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>
+          );
+        },
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-2 border-primary/40 pl-3 my-2 text-muted-foreground">{children}</blockquote>
+        ),
+        hr: () => <hr className="border-border/40 my-2" />,
+        a: ({ href, children }) => (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
 
 export default function Chat() {
   const { user } = useAuth();
@@ -77,7 +117,6 @@ export default function Chat() {
     <div className="flex flex-col h-full bg-background relative overflow-hidden">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Header */}
       <header className="px-4 py-3 border-b border-border/40 bg-background/90 backdrop-blur-md z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -97,7 +136,6 @@ export default function Chat() {
         </span>
       </header>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
         <div className="max-w-2xl mx-auto flex flex-col gap-6">
           {isInitial ? (
@@ -128,7 +166,7 @@ export default function Chat() {
                   className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                 >
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-1 overflow-hidden ${
                       msg.role === "user" ? "bg-muted" : ""
                     }`}
                   >
@@ -139,15 +177,19 @@ export default function Chat() {
                     )}
                   </div>
 
-                  <div className={`flex flex-col gap-1.5 max-w-[82%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                  <div className={`flex flex-col gap-1.5 max-w-[84%] ${msg.role === "user" ? "items-end" : "items-start"}`}>
                     <div
                       className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                         msg.role === "user"
                           ? "bg-card border border-border/60 text-foreground rounded-tr-sm"
-                          : "bg-transparent text-foreground"
+                          : "text-foreground/90"
                       }`}
                     >
-                      {msg.content}
+                      {msg.role === "assistant" ? (
+                        <MessageContent content={msg.content} />
+                      ) : (
+                        msg.content
+                      )}
                     </div>
 
                     {msg.role === "assistant" && msg.source && (
@@ -175,7 +217,7 @@ export default function Chat() {
 
           {chatMutation.isPending && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-              <div className="w-7 h-7 shrink-0 mt-0.5">
+              <div className="w-7 h-7 shrink-0 mt-1">
                 <img src="/nzila-logo.png" alt="" className="w-full h-full object-contain p-0.5" />
               </div>
               <div className="flex items-center gap-1.5 h-10">
@@ -194,7 +236,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Input */}
       <div className="p-4 bg-background/90 backdrop-blur-md border-t border-border/40 z-20">
         <div className="max-w-2xl mx-auto">
           <AnimatePresence>
