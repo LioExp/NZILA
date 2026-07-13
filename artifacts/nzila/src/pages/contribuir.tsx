@@ -1,4 +1,4 @@
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/contexts/profile-context";
 import { useGetUserRanking, useCreateContribution } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
@@ -23,39 +23,33 @@ function AccessDenied() {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
         className="max-w-md text-center space-y-5"
       >
-        <div className="w-14 h-14 rounded-2xl bg-muted/50 border border-border/60 flex items-center justify-center mx-auto">
-          <Lock className="w-6 h-6 text-muted-foreground" />
+        <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border/60 flex items-center justify-center mx-auto">
+          <Lock className="w-5 h-5 text-muted-foreground" />
         </div>
         <div>
           <h2 className="text-xl font-semibold text-foreground" style={{ letterSpacing: "-0.02em" }}>
             Funcionalidade exclusiva
           </h2>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Contribuir para o dicionário de gírias é um privilégio reservado
-            à comunidade angolana. Estrangeiros podem explorar e aprender com
-            o nosso dicionário, mas a produção de conhecimento pertence a Angola.
+            Contribuir para o dicionário é um privilégio reservado à comunidade angolana.
+            Estrangeiros podem explorar e aprender, mas a produção de conhecimento pertence a Angola.
           </p>
         </div>
-        <div className="bg-card border border-border/60 rounded-xl p-4 text-sm text-left space-y-2.5">
+        <div className="bg-card border border-border/60 rounded-xl p-4 text-sm text-left space-y-3">
           <div className="flex items-start gap-3">
             <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-foreground text-[13px]">Para angolanos</p>
-              <p className="text-muted-foreground text-xs mt-0.5">
-                Contribui, revê e enriquece o benchmark de gírias angolanas.
-              </p>
+              <p className="font-semibold text-foreground text-[13px]">Para angolanos</p>
+              <p className="text-muted-foreground text-xs mt-0.5">Contribui, revê e enriquece o benchmark de gírias.</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <Info className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-foreground text-[13px]">Para todos</p>
-              <p className="text-muted-foreground text-xs mt-0.5">
-                Acesso ao dicionário, ao chat e ao benchmark comparativo.
-              </p>
+              <p className="font-semibold text-foreground text-[13px]">Para todos</p>
+              <p className="text-muted-foreground text-xs mt-0.5">Dicionário, chat e benchmark comparativo.</p>
             </div>
           </div>
         </div>
@@ -83,7 +77,6 @@ export default function Contribuir() {
         toast({ title: "Contribuição enviada", description: "Obrigado por enriquecer o Nzila." });
         form.reset();
         queryClient.invalidateQueries({ queryKey: [`/api/ranking/${userId}`] });
-        queryClient.invalidateQueries({ queryKey: [`/api/contributions`] });
       },
       onError: (err) => {
         toast({
@@ -95,13 +88,7 @@ export default function Contribuir() {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    createMutation.mutate({ data: { userId, ...data } });
-  };
-
-  if (profile && profile.isAngolan === false) {
-    return <AccessDenied />;
-  }
+  if (profile && profile.isAngolan === false) return <AccessDenied />;
 
   const isBlocked = ranking?.isBlocked || ranking?.level === "Horrível";
 
@@ -123,19 +110,16 @@ export default function Contribuir() {
           </h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-xl">
             Ajuda o Nzila a crescer adicionando expressões da nossa cultura.
-            As tuas contribuições enriquecem o dataset para toda a comunidade.
           </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Stats */}
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-card border border-border/60 rounded-xl p-5">
               <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Award className="w-4 h-4 text-primary" />
                 O Teu Perfil
               </h3>
-
               {rankingLoading ? (
                 <div className="space-y-3 animate-pulse">
                   <div className="h-7 bg-muted/50 rounded-lg" />
@@ -183,7 +167,6 @@ export default function Contribuir() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -200,7 +183,7 @@ export default function Contribuir() {
                 </div>
               )}
 
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <form onSubmit={form.handleSubmit((d) => createMutation.mutate({ data: { userId, ...d } }))} className="space-y-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-foreground">Termo / Gíria</label>
                   <input
@@ -244,14 +227,7 @@ export default function Contribuir() {
                   disabled={createMutation.isPending || isBlocked}
                   className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold py-3 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {createMutation.isPending ? (
-                    "A enviar..."
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Enviar para Revisão
-                    </>
-                  )}
+                  {createMutation.isPending ? "A enviar..." : <><Send className="w-4 h-4" /> Enviar para Revisão</>}
                 </button>
               </form>
             </motion.div>

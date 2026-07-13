@@ -1,70 +1,98 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth } from "@workspace/replit-auth-web";
-import { MessageCircle, Globe, Users, ArrowRight } from "lucide-react";
-
-const features = [
-  { icon: MessageCircle, label: "Gírias Angolanas" },
-  { icon: Globe, label: "Cultura Local" },
-  { icon: Users, label: "Comunidade" },
-];
+import { ArrowRight, User, Mail, AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Login() {
   const { login } = useAuth();
+  const [firstName, setFirstName] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!firstName.trim()) {
+      setError("Introduz o teu nome.");
+      return;
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Introduz um endereço de email válido.");
+      return;
+    }
+
+    login(firstName, email);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden px-4">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-secondary/8 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[350px] bg-primary/8 rounded-full blur-[140px] pointer-events-none" />
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col items-center text-center max-w-sm w-full z-10 gap-7"
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-sm z-10"
       >
-        <div className="w-24 h-24">
-          <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain drop-shadow-2xl" />
-        </div>
-
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-semibold text-white tracking-tight" style={{ letterSpacing: "-0.03em" }}>
-            Nzila
+        {/* Logo + Brand */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 mb-5">
+            <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain" />
+          </div>
+          <h1 className="text-2xl font-semibold text-foreground" style={{ letterSpacing: "-0.03em" }}>
+            Entrar no Nzila
           </h1>
-          <p className="text-sm font-medium text-primary tracking-wide uppercase">
-            Assistente Angolano com IA
+          <p className="text-sm text-muted-foreground mt-1.5 text-center">
+            O assistente de IA com alma angolana
           </p>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          O primeiro assistente de IA com alma angolana. Fala as nossas
-          gírias, conhece a nossa cultura e está aqui para ajudar.
-        </p>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="relative">
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="O teu nome"
+              autoComplete="given-name"
+              className="w-full bg-card border border-border/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/8 rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all"
+            />
+          </div>
 
-        <div className="grid grid-cols-3 gap-2.5 w-full">
-          {features.map(({ icon: Icon, label }) => (
-            <div
-              key={label}
-              className="bg-card border border-border/60 rounded-xl p-3.5 flex flex-col items-center gap-2"
-            >
-              <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-              <span className="text-[11px] text-muted-foreground font-medium leading-tight text-center">
-                {label}
-              </span>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60 pointer-events-none" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="O teu email"
+              autoComplete="email"
+              className="w-full bg-card border border-border/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/8 rounded-xl pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all"
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-destructive text-xs px-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {error}
             </div>
-          ))}
-        </div>
+          )}
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={login}
-          className="w-full py-3.5 rounded-xl bg-primary text-white font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-200 flex items-center justify-center gap-2"
-        >
-          Entrar no Nzila
-          <ArrowRight className="w-4 h-4" />
-        </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            type="submit"
+            className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 mt-1"
+          >
+            Entrar
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+        </form>
 
-        <p className="text-[11px] text-muted-foreground/50">
+        <p className="text-center text-[11px] text-muted-foreground/40 mt-5">
           Ao entrar, concordas com os nossos termos de uso.
         </p>
       </motion.div>

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, User, CornerDownLeft, Menu } from "lucide-react";
 import { useSendChatMessage } from "@workspace/api-client-react";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/contexts/profile-context";
 import { useChatStore, type ChatMessage } from "@/hooks/use-chat-history";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -72,11 +72,10 @@ export default function Chat() {
   };
 
   const isInitial = messages.length === 0;
-  const greeting = user?.firstName ? `Olá, ${user.firstName}` : "Olá";
 
   return (
     <div className="flex flex-col h-full bg-background relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/6 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[280px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Header */}
       <header className="px-4 py-3 border-b border-border/40 bg-background/90 backdrop-blur-md z-10 flex items-center justify-between">
@@ -106,16 +105,16 @@ export default function Chat() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-5"
+              className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4"
             >
-              <div className="w-20 h-20">
+              <div className="w-16 h-16">
                 <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain drop-shadow-xl" />
               </div>
               <div>
                 <h2 className="text-3xl font-semibold text-foreground" style={{ letterSpacing: "-0.03em" }}>
-                  {greeting}
+                  {user?.firstName ? `Olá, ${user.firstName}` : "Olá"}
                 </h2>
-                <p className="text-base text-muted-foreground mt-1">Como posso ajudar hoje?</p>
+                <p className="text-sm text-muted-foreground mt-1">Como posso ajudar hoje?</p>
               </div>
             </motion.div>
           ) : (
@@ -130,15 +129,11 @@ export default function Chat() {
                 >
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${
-                      msg.role === "user" ? "bg-muted" : "bg-transparent"
+                      msg.role === "user" ? "bg-muted" : ""
                     }`}
                   >
                     {msg.role === "user" ? (
-                      user?.profileImageUrl ? (
-                        <img src={user.profileImageUrl} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                      )
+                      <User className="w-3.5 h-3.5 text-muted-foreground" />
                     ) : (
                       <img src="/nzila-logo.png" alt="" className="w-full h-full object-contain p-0.5" />
                     )}

@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { useAuth } from "@workspace/replit-auth-web";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProfileProvider, useProfile } from "@/contexts/profile-context";
 import { OnboardingModal } from "@/components/onboarding-modal";
 
@@ -32,11 +32,11 @@ function Router() {
 }
 
 function AppShell() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { profile, isLoading: profileLoading, updateProfile } = useProfile();
+  const { user, isLoading } = useAuth();
+  const { profile, updateProfile } = useProfile();
 
-  const handleOnboardingComplete = async (data: { isAngolan: boolean; country: string }) => {
-    await updateProfile({ ...data, onboardingDone: true });
+  const handleOnboardingComplete = (data: { isAngolan: boolean; country: string }) => {
+    updateProfile({ ...data, onboardingDone: true });
   };
 
   const sidebarStyle = {
@@ -44,20 +44,17 @@ function AppShell() {
     "--sidebar-width-icon": "3.5rem",
   };
 
-  if (authLoading || (isAuthenticated && profileLoading && !profile)) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 opacity-70">
-            <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain" />
-          </div>
-          <p className="text-xs text-muted-foreground">A carregar...</p>
+        <div className="w-10 h-10 opacity-60">
+          <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain" />
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) return <Login />;
+  if (!user) return <Login />;
 
   return (
     <SidebarProvider style={sidebarStyle as React.CSSProperties}>
@@ -70,7 +67,7 @@ function AppShell() {
 
       {profile && !profile.onboardingDone && (
         <OnboardingModal
-          userName={user?.firstName ?? null}
+          userName={user.firstName}
           onComplete={handleOnboardingComplete}
         />
       )}
@@ -83,9 +80,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <ProfileProvider>
-            <AppShell />
-          </ProfileProvider>
+          <AuthProvider>
+            <ProfileProvider>
+              <AppShell />
+            </ProfileProvider>
+          </AuthProvider>
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

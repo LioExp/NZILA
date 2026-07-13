@@ -2,7 +2,7 @@ import { BookOpen, MessageSquare, PenTool, BarChart2, PlusCircle, History, LogOu
 import { Link, useLocation } from "wouter";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useChatStore } from "@/hooks/use-chat-history";
-import type { AuthUser } from "@workspace/replit-auth-web";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +19,7 @@ import {
 import { format } from "date-fns";
 
 interface AppSidebarProps {
-  user?: AuthUser | null;
+  user: { firstName: string; email: string; profileImageUrl: string | null } | null;
   isAngolan: boolean | null;
 }
 
@@ -27,6 +27,7 @@ export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
   const [location, setLocation] = useLocation();
   const { data: conversations } = useListOpenaiConversations();
   const { clearMessages } = useChatStore();
+  const { logout } = useAuth();
 
   const allNavItems = [
     { title: "Chat", url: "/", icon: MessageSquare, angolanOnly: false },
@@ -42,10 +43,6 @@ export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
     setLocation("/");
   };
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
-  };
-
   return (
     <Sidebar className="border-r border-border/40 bg-sidebar">
       <SidebarHeader className="p-4 pb-3">
@@ -53,9 +50,9 @@ export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
           <div className="w-7 h-7 shrink-0">
             <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <h2 className="font-semibold text-lg text-foreground" style={{ letterSpacing: "-0.02em" }}>Nzila</h2>
-          </div>
+          <h2 className="font-semibold text-lg text-foreground" style={{ letterSpacing: "-0.02em" }}>
+            Nzila
+          </h2>
         </div>
         <button
           onClick={handleNewChat}
@@ -140,27 +137,17 @@ export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
       {user && (
         <SidebarFooter className="p-3 border-t border-border/30">
           <div className="flex items-center gap-2.5 px-1">
-            {user.profileImageUrl ? (
-              <img
-                src={user.profileImageUrl}
-                alt={user.firstName ?? ""}
-                className="w-7 h-7 rounded-full object-cover shrink-0"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                <span className="text-primary font-bold text-xs">
-                  {(user.firstName?.[0] ?? "U").toUpperCase()}
-                </span>
-              </div>
-            )}
+            <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <span className="text-primary font-bold text-xs">
+                {user.firstName[0].toUpperCase()}
+              </span>
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-foreground truncate">
-                {user.firstName} {user.lastName}
-              </p>
+              <p className="text-xs font-semibold text-foreground truncate">{user.firstName}</p>
               <p className="text-[10px] text-muted-foreground/60 truncate">{user.email}</p>
             </div>
             <button
-              onClick={handleLogout}
+              onClick={logout}
               className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
               title="Terminar sessão"
             >

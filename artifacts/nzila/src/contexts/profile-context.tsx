@@ -1,68 +1,59 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Profile {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  profileImageUrl: string | null;
   country: string | null;
   isAngolan: boolean | null;
   onboardingDone: boolean;
-  level: string;
 }
 
 interface ProfileContextValue {
   profile: Profile | null;
   isLoading: boolean;
-  refetch: () => void;
-  updateProfile: (data: Partial<Pick<Profile, "country" | "isAngolan" | "onboardingDone">>) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => void;
 }
+
+const PROFILE_KEY = "nzila_profile";
 
 const ProfileContext = createContext<ProfileContextValue>({
   profile: null,
   isLoading: false,
-  refetch: () => {},
-  updateProfile: async () => {},
+  updateProfile: () => {},
 });
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [tick, setTick] = useState(0);
-
-  const refetch = () => setTick((t) => t + 1);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       setProfile(null);
       return;
     }
     setIsLoading(true);
-    fetch("/api/profile", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        setProfile(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, [isAuthenticated, tick]);
+    try {
+      const stored = localStorage.getItem(`${PROFILE_KEY}_${user.id}`);
+      if (stored) {
+        setProfile(JSON.parse(stored));
+      } else {
+        setProfile({ country: null, isAngolan: null, onboardingDone: false });
+      }
+    } catch {
+      setProfile({ country: null, isAngolan: null, onboardingDone: false });
+    }
+    setIsLoading(false);
+  }, [isAuthenticated, user?.id]);
 
-  const updateProfile = async (data: Partial<Pick<Profile, "country" | "isAngolan" | "onboardingDone">>) => {
-    const res = await fetch("/api/profile", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-    const updated = await res.json();
+  const updateProfile = (data: Partial<Profile>) => {
+    if (!user) return;
+    const updated = { ...(profile ?? { country: null, isAngolan: null, onboardingDone: false }), ...data };
+    localStorage.setItem(`${PROFILE_KEY}_${user.id}`, JSON.stringify(updated));
     setProfile(updated);
   };
 
   return (
-    <ProfileContext.Provider value={{ profile, isLoading, refetch, updateProfile }}>
+    <ProfileContext.Provider value={{ profile, isLoading, updateProfile }}>
       {children}
     </ProfileContext.Provider>
   );
