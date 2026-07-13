@@ -112,7 +112,7 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
     let fullResponse = "";
 
     const stream = await openai.chat.completions.create({
-      model: "gpt-5.2",
+      model: "meta-llama/llama-3.1-8b-instruct",
       max_completion_tokens: 8192,
       messages: chatMessages,
       stream: true,

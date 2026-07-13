@@ -120,7 +120,7 @@ Gírias disponíveis: ${giriaContext}
 Sê natural, directo e informativo. Usa formatação Markdown quando adequado. Nunca inventes factos.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-5.2",
+      model: "meta-llama/llama-3.1-8b-instruct",
       max_completion_tokens: 8192,
       messages: [
         { role: "system", content: systemPrompt },
@@ -130,13 +130,20 @@ Sê natural, directo e informativo. Usa formatação Markdown quando adequado. N
 
     const rawResponse = completion.choices[0]?.message?.content ?? "";
 
+    const cleanResponse = rawResponse
+      .replace(/<system-reminder>[\s\S]*<\/system-reminder>/g, "")
+      .replace(/<system[^>]*>[\s\S]*<\/system>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
     if (shouldReturnTravel) {
       try {
-        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+        const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           res.json({
-            response: parsed.message ?? rawResponse,
+            response: parsed.message ?? cleanResponse,
             source: "ai",
             matchedGiria: null,
             conversationId: 1,
@@ -156,7 +163,7 @@ Sê natural, directo e informativo. Usa formatação Markdown quando adequado. N
     }
 
     res.json({
-      response: rawResponse,
+      response: cleanResponse,
       source: "ai",
       matchedGiria: null,
       conversationId: 1,

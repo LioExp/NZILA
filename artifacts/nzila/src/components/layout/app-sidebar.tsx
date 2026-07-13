@@ -44,7 +44,7 @@ export function AppSidebar({ user, isAngolan }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="border-r border-border/40 bg-sidebar">
+    <Sidebar className="bg-sidebar">
       <SidebarHeader className="p-4 pb-3">
         <div className="flex items-center gap-2.5 px-1 mb-4">
           <div className="w-7 h-7 shrink-0">
