@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Sparkles, User, CornerDownLeft, Menu } from "lucide-react";
 import { useSendChatMessage } from "@workspace/api-client-react";
-import { useUserId } from "@/hooks/use-user";
+import { useAuth } from "@workspace/replit-auth-web";
 import { useChatStore, type ChatMessage } from "@/hooks/use-chat-history";
 import { useSidebar } from "@/components/ui/sidebar";
 import { v4 as uuidv4 } from "uuid";
@@ -16,12 +16,23 @@ const SUGGESTIONS = [
 ];
 
 export default function Chat() {
-  const userId = useUserId();
+  const { user } = useAuth();
   const [input, setInput] = useState("");
+  const [userProfile, setUserProfile] = useState<{ country: string | null; isAngolan: boolean | null } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toggleSidebar } = useSidebar();
   
   const { messages, addMessage, activeConversationId, setConversationId } = useChatStore();
+
+  // Load profile for AI context
+  useEffect(() => {
+    if (user) {
+      fetch("/api/profile", { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => setUserProfile({ country: data.country, isAngolan: data.isAngolan }))
+        .catch(() => {});
+    }
+  }, [user]);
   
   const chatMutation = useSendChatMessage({
     mutation: {
@@ -40,8 +51,7 @@ export default function Chat() {
         };
         addMessage(assistantMsg);
       },
-      onError: (err) => {
-        console.error("Chat error:", err);
+      onError: () => {
         addMessage({
           id: uuidv4(),
           role: 'assistant',
@@ -62,7 +72,7 @@ export default function Chat() {
   }, [messages, chatMutation.isPending]);
 
   const handleSend = (text: string) => {
-    if (!text.trim() || !userId) return;
+    if (!text.trim() || !user) return;
 
     const userMsg: ChatMessage = {
       id: uuidv4(),
@@ -77,13 +87,17 @@ export default function Chat() {
     chatMutation.mutate({
       data: {
         message: text,
-        userId,
-        conversationId: activeConversationId
+        userId: user.id,
+        conversationId: activeConversationId,
+        userName: user.firstName ?? null,
+        country: userProfile?.country ?? null,
+        isAngolan: userProfile?.isAngolan ?? null,
       }
     });
   };
 
   const isInitial = messages.length === 0;
+  const greeting = user?.firstName ? `Olá ${user.firstName}!` : "Olá kamba!";
 
   return (
     <div className="flex flex-col h-full bg-background/50 relative overflow-hidden">
@@ -94,7 +108,6 @@ export default function Chat() {
       {/* Header */}
       <header className="px-4 py-3 border-b border-border/40 bg-background/80 backdrop-blur-md z-10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          {/* Mobile menu button */}
           <button
             onClick={toggleSidebar}
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-muted-foreground hover:text-foreground shrink-0"
@@ -126,7 +139,7 @@ export default function Chat() {
                 <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain drop-shadow-2xl" />
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                Olá kamba!<br/>Como posso ajudar?
+                {greeting}<br/>Como posso ajudar?
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground max-w-sm sm:max-w-lg">
                 Sou o Nzila, teu assistente virtual com alma angolana. Podes falar comigo usando as nossas gírias.
@@ -148,10 +161,15 @@ export default function Chat() {
                       ? 'bg-secondary text-secondary-foreground' 
                       : ''
                   }`}>
-                    {msg.role === 'user' 
-                      ? <User className="w-4 h-4 sm:w-5 sm:h-5" /> 
-                      : <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain p-0.5" />
-                    }
+                    {msg.role === 'user' ? (
+                      user?.profileImageUrl ? (
+                        <img src={user.profileImageUrl} alt="You" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                      )
+                    ) : (
+                      <img src="/nzila-logo.png" alt="Nzila" className="w-full h-full object-contain p-0.5" />
+                    )}
                   </div>
 
                   {/* Message Bubble */}
@@ -164,7 +182,6 @@ export default function Chat() {
                       {msg.content}
                     </div>
                     
-                    {/* Meta Info (Source Badges) */}
                     {msg.role === 'assistant' && msg.source && (
                       <div className="flex flex-wrap items-center gap-2 px-1">
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1 ${

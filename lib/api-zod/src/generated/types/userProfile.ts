@@ -6,15 +6,20 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ChatRequest {
-  message: string;
-  userId: string;
+export interface UserProfile {
+  id: string;
   /** @nullable */
-  conversationId?: number | null;
+  firstName?: string | null;
   /** @nullable */
-  userName?: string | null;
+  lastName?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  profileImageUrl?: string | null;
   /** @nullable */
   country?: string | null;
   /** @nullable */
   isAngolan?: boolean | null;
+  onboardingDone: boolean;
+  level: string;
 }

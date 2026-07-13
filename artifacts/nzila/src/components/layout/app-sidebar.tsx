@@ -1,7 +1,8 @@
-import { BookOpen, MessageSquare, PenTool, BarChart2, PlusCircle, History } from "lucide-react";
+import { BookOpen, MessageSquare, PenTool, BarChart2, PlusCircle, History, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useListOpenaiConversations } from "@workspace/api-client-react";
 import { useChatStore } from "@/hooks/use-chat-history";
+import type { AuthUser } from "@workspace/replit-auth-web";
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { format } from "date-fns";
 
@@ -23,7 +25,11 @@ const mainNav = [
   { title: "Benchmark", url: "/benchmark", icon: BarChart2 },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  user?: AuthUser | null;
+}
+
+export function AppSidebar({ user }: AppSidebarProps) {
   const [location, setLocation] = useLocation();
   const { data: conversations } = useListOpenaiConversations();
   const { clearMessages } = useChatStore();
@@ -31,6 +37,10 @@ export function AppSidebar() {
   const handleNewChat = () => {
     clearMessages();
     setLocation("/");
+  };
+
+  const handleLogout = () => {
+    window.location.href = "/api/logout";
   };
 
   return (
@@ -95,7 +105,7 @@ export function AppSidebar() {
               {conversations?.slice(0, 8).map((conv) => (
                 <SidebarMenuItem key={conv.id}>
                   <SidebarMenuButton asChild className="hover:bg-white/5 rounded-lg py-4 text-muted-foreground hover:text-foreground transition-colors">
-                    <button onClick={() => {/* Will load history */}} className="flex flex-col items-start gap-1 w-full text-left">
+                    <button onClick={() => {}} className="flex flex-col items-start gap-1 w-full text-left">
                       <span className="truncate w-full font-medium text-sm">{conv.title || "Nova Conversa"}</span>
                       <span className="text-[10px] text-muted-foreground/60">
                         {format(new Date(conv.createdAt), "dd MMM, HH:mm")}
@@ -113,6 +123,40 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* User profile footer */}
+      {user && (
+        <SidebarFooter className="p-4 border-t border-border/40">
+          <div className="flex items-center gap-3">
+            {user.profileImageUrl ? (
+              <img
+                src={user.profileImageUrl}
+                alt={user.firstName ?? "User"}
+                className="w-8 h-8 rounded-full object-cover shrink-0"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <span className="text-primary font-bold text-sm">
+                  {(user.firstName?.[0] ?? "U").toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+              title="Sair"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }

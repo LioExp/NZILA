@@ -14,6 +14,12 @@ export interface ChatRequest {
   userId: string;
   /** @nullable */
   conversationId?: number | null;
+  /** @nullable */
+  userName?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  isAngolan?: boolean | null;
 }
 
 export interface ChatResponse {
@@ -67,6 +73,32 @@ export interface UserRanking {
   isBlocked: boolean;
 }
 
+export interface UserProfile {
+  id: string;
+  /** @nullable */
+  firstName?: string | null;
+  /** @nullable */
+  lastName?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  profileImageUrl?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  isAngolan?: boolean | null;
+  onboardingDone: boolean;
+  level: string;
+}
+
+export interface UpdateProfileBody {
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  isAngolan?: boolean | null;
+  onboardingDone?: boolean;
+}
+
 export interface ApiError {
   error: string;
 }
@@ -103,3 +135,60 @@ export interface OpenaiConversationWithMessages {
 export interface OpenaiError {
   error: string;
 }
+
+export interface AuthUser {
+  id: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  firstName: string | null;
+  /** @nullable */
+  lastName: string | null;
+  /** @nullable */
+  profileImageUrl: string | null;
+}
+
+export interface AuthUserEnvelope {
+  user: AuthUser | null;
+}
+
+export interface MobileTokenExchangeRequest {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  code_verifier: string;
+  /** @minLength 1 */
+  redirect_uri: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  nonce?: string;
+}
+
+export interface MobileTokenExchangeSuccess {
+  token: string;
+}
+
+export const LogoutSuccessValue = {
+  success: true,
+} as const;
+export type LogoutSuccess = typeof LogoutSuccessValue;
+
+export interface ErrorEnvelope {
+  error: string;
+}
+
+/**
+ * Opaque session token — Bearer <sid>.
+ */
+export type AuthorizationSessionHeaderParameter = string;
+
+export type BeginBrowserLoginParams = {
+  returnTo?: string;
+};
+
+export type HandleBrowserLoginCallbackParams = {
+  code?: string;
+  state?: string;
+  iss?: string;
+};
