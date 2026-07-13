@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
 import pinoHttp from "pino-http";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import router from "./routes";
@@ -34,5 +35,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(authMiddleware);
 
 app.use("/api", router);
+
+const frontendDir = path.resolve(
+  import.meta.dirname,
+  "../../artifacts/nzila/dist/public",
+);
+app.use(express.static(frontendDir));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(frontendDir, "index.html"));
+});
 
 export default app;
