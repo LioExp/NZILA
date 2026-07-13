@@ -41,7 +41,7 @@ const frontendDir = path.resolve(
   "../../artifacts/nzila/dist/public",
 );
 app.use(express.static(frontendDir));
-app.get("*", (_req, res) => {
+app.get("/{*any}", (_req, res) => {
   res.sendFile(path.join(frontendDir, "index.html"));
 });
 
