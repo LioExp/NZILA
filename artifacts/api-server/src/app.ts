@@ -38,7 +38,7 @@ app.use("/api", router);
 
 const frontendDir = path.resolve(
   import.meta.dirname,
-  "../../artifacts/nzila/dist/public",
+  "../../../artifacts/nzila/dist/public",
 );
 app.use(express.static(frontendDir));
 app.get("/{*any}", (_req, res) => {
