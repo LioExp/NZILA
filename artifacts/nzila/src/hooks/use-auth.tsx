@@ -9,23 +9,43 @@ interface LocalUser {
   profileImageUrl: string | null;
 }
 
+interface StoredAccount {
+  id: string;
+  firstName: string;
+  password: string;
+}
+
 interface AuthContextValue {
   user: LocalUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (firstName: string, email: string) => void;
+  login: (firstName: string, email: string, password: string) => string | null;
   logout: () => void;
 }
 
-const AUTH_KEY = "nzila_auth_user";
+const SESSION_KEY = "nzila_session";
+const ACCOUNTS_KEY = "nzila_accounts";
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
-  login: () => {},
+  login: () => null,
   logout: () => {},
 });
+
+function getAccounts(): Record<string, StoredAccount> {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAccounts(accounts: Record<string, StoredAccount>) {
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LocalUser | null>(null);
@@ -33,35 +53,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(AUTH_KEY);
+      const stored = localStorage.getItem(SESSION_KEY);
       if (stored) setUser(JSON.parse(stored));
     } catch {}
     setIsLoading(false);
   }, []);
 
-  const login = (firstName: string, email: string) => {
-    const existing = localStorage.getItem(AUTH_KEY);
-    let id = uuidv4();
+  const login = (firstName: string, email: string, password: string): string | null => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const accounts = getAccounts();
+    const existing = accounts[normalizedEmail];
+
     if (existing) {
-      try {
-        const parsed = JSON.parse(existing);
-        if (parsed.email === email) id = parsed.id;
-      } catch {}
+      if (existing.password !== password) {
+        return "Senha incorrecta.";
+      }
+      const sessionUser: LocalUser = {
+        id: existing.id,
+        firstName: existing.firstName,
+        lastName: null,
+        email: normalizedEmail,
+        profileImageUrl: null,
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+      setUser(sessionUser);
+      return null;
     }
-    const newUser: LocalUser = {
-      id,
+
+    const newId = uuidv4();
+    accounts[normalizedEmail] = {
+      id: newId,
+      firstName: firstName.trim(),
+      password,
+    };
+    saveAccounts(accounts);
+
+    const sessionUser: LocalUser = {
+      id: newId,
       firstName: firstName.trim(),
       lastName: null,
-      email: email.trim().toLowerCase(),
+      email: normalizedEmail,
       profileImageUrl: null,
     };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
-    setUser(newUser);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
+    setUser(sessionUser);
+    return null;
   };
 
   const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem("nzila_profile");
+    localStorage.removeItem(SESSION_KEY);
     setUser(null);
   };
 
