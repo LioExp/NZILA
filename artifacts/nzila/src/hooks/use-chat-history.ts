@@ -1,11 +1,23 @@
 import { create } from 'zustand';
 
+export interface TravelData {
+  placeNames: string[];
+  focus: {
+    name: string;
+    mapLat: number;
+    mapLng: number;
+    mapZoom: number;
+  };
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   source?: string;
   matchedGiria?: string | null;
+  travelData?: TravelData | null;
+  fileAttachment?: { name: string; type: string; dataUrl?: string } | null;
   createdAt: Date;
 }
 

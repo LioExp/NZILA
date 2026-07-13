@@ -25,6 +25,14 @@ export const SendChatMessageBody = zod.object({
   userName: zod.string().nullish(),
   country: zod.string().nullish(),
   isAngolan: zod.boolean().nullish(),
+  travelMode: zod.boolean().nullish(),
+});
+
+const TravelPlace = zod.object({
+  name: zod.string(),
+  mapLat: zod.number(),
+  mapLng: zod.number(),
+  mapZoom: zod.number(),
 });
 
 export const SendChatMessageResponse = zod.object({
@@ -32,6 +40,10 @@ export const SendChatMessageResponse = zod.object({
   source: zod.string().describe("dataset | ai"),
   matchedGiria: zod.string().nullish(),
   conversationId: zod.number(),
+  travelData: zod.object({
+    placeNames: zod.array(zod.string()),
+    focus: TravelPlace,
+  }).nullish(),
 });
 
 /**
