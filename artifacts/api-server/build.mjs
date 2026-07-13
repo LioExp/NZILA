@@ -23,6 +23,13 @@ async function buildAll() {
     env: { ...process.env, NODE_ENV: "production" },
   });
 
+  console.log("Pushing database schema...");
+  execSync("pnpm --filter @workspace/db run push", {
+    cwd: rootDir,
+    stdio: "inherit",
+    env: { ...process.env },
+  });
+
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
