@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ProfileProvider, useProfile } from "@/contexts/profile-context";
 import { OnboardingModal } from "@/components/onboarding-modal";
 
+import { ErrorBoundary } from "@/components/error-boundary";
 import Chat from "@/pages/chat";
 import Girias from "@/pages/girias";
 import Contribuir from "@/pages/contribuir";
@@ -61,7 +62,9 @@ function AppShell() {
       <div className="flex h-screen w-full overflow-hidden bg-background">
         <AppSidebar user={user} isAngolan={profile?.isAngolan ?? null} />
         <main className="flex-1 relative flex flex-col min-w-0">
-          <Router />
+          <ErrorBoundary>
+            <Router />
+          </ErrorBoundary>
         </main>
       </div>
 
