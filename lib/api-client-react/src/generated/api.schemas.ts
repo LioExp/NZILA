@@ -20,6 +20,20 @@ export interface ChatRequest {
   country?: string | null;
   /** @nullable */
   isAngolan?: boolean | null;
+  /** @nullable */
+  travelMode?: boolean | null;
+}
+
+export interface TravelPlace {
+  name: string;
+  mapLat: number;
+  mapLng: number;
+  mapZoom: number;
+}
+
+export interface TravelData {
+  placeNames: string[];
+  focus: TravelPlace;
 }
 
 export interface ChatResponse {
@@ -29,6 +43,8 @@ export interface ChatResponse {
   /** @nullable */
   matchedGiria?: string | null;
   conversationId: number;
+  /** @nullable */
+  travelData?: TravelData | null;
 }
 
 export interface Giria {

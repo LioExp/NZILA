@@ -14,6 +14,7 @@ import { useProfile } from "@/contexts/profile-context";
 import { useChatStore, type ChatMessage } from "@/hooks/use-chat-history";
 import { useSidebar } from "@/components/ui/sidebar";
 import { TravelCard } from "@/components/travel-card";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { v4 as uuidv4 } from "uuid";
 
 const SUGGESTIONS = [
@@ -25,6 +26,9 @@ const SUGGESTIONS = [
 ];
 
 function MessageContent({ content }: { content: string }) {
+  if (typeof content !== "string" || content.length === 0) {
+    return <p className="text-muted-foreground italic">(mensagem vazia)</p>;
+  }
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -190,14 +194,16 @@ export default function Chat() {
 
   const handleVersionChange = useCallback((assistantMsgId: string, direction: "prev" | "next") => {
     const msg = messages.find((m) => m.id === assistantMsgId);
-    if (!msg || !msg.versions) return;
+    if (!msg || !msg.versions || msg.versions.length === 0) return;
     const current = msg.currentVersion ?? 0;
     const next = direction === "next"
       ? Math.min(current + 1, msg.versions.length - 1)
       : Math.max(current - 1, 0);
+    const content = msg.versions[next];
+    if (content === undefined) return;
     updateMessage(assistantMsgId, {
       currentVersion: next,
-      content: msg.versions[next],
+      content,
     });
   }, [messages, updateMessage]);
 
@@ -288,7 +294,9 @@ export default function Chat() {
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <MessageContent content={msg.content} />
+                        <ErrorBoundary fallback={<p className="text-muted-foreground italic">Erro ao renderizar mensagem</p>}>
+                          <MessageContent content={msg.content} />
+                        </ErrorBoundary>
                       ) : (
                         msg.content
                       )}
