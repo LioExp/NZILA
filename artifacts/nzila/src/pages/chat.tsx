@@ -1,13 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Send, User, CornerDownLeft, Menu, Plus,
-  Map, Paperclip, X, FileText, Image as ImageIcon,
+  Send, User, Menu,
+  Map, X, FileText, Image as ImageIcon,
   Globe, PlusCircle, Copy, Volume2, ThumbsUp, ThumbsDown, RefreshCw,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useSendChatMessage } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/contexts/profile-context";
@@ -25,45 +23,166 @@ const SUGGESTIONS = [
   "Melhores praias de Angola",
 ];
 
+function InlineMarkdown({ text }: { text: string }) {
+  const parts: (string | JSX.Element)[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    const boldMatch = remaining.match(/^(\*\*|__)(.+?)\1/);
+    if (boldMatch) {
+      parts.push(<strong key={key++} className="font-semibold text-white">{boldMatch[2]}</strong>);
+      remaining = remaining.slice(boldMatch[0].length);
+      continue;
+    }
+    const italicMatch = remaining.match(/^(\*|_)(.+?)\1/);
+    if (italicMatch) {
+      parts.push(<em key={key++} className="italic text-foreground/90">{italicMatch[2]}</em>);
+      remaining = remaining.slice(italicMatch[0].length);
+      continue;
+    }
+    const codeMatch = remaining.match(/^`([^`]+)`/);
+    if (codeMatch) {
+      parts.push(<code key={key++} className="bg-muted/60 rounded px-1.5 py-0.5 text-xs font-mono">{codeMatch[1]}</code>);
+      remaining = remaining.slice(codeMatch[0].length);
+      continue;
+    }
+    const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
+    if (linkMatch) {
+      parts.push(
+        <a key={key++} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+          {linkMatch[1]}
+        </a>
+      );
+      remaining = remaining.slice(linkMatch[0].length);
+      continue;
+    }
+    parts.push(remaining[0]);
+    remaining = remaining.slice(1);
+  }
+
+  return <>{...parts}</>;
+}
+
+function SimpleMarkdown({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const elements: JSX.Element[] = [];
+  let key = 0;
+  let inList: "ul" | null = null;
+  let listItems: JSX.Element[] = [];
+
+  function flushList() {
+    if (inList && listItems.length > 0) {
+      const Tag = inList === "ul" ? "ul" : "ol";
+      elements.push(
+        <Tag key={key++} className="list-disc pl-4 mb-2 space-y-0.5">
+          {listItems}
+        </Tag>
+      );
+      listItems = [];
+    }
+    inList = null;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed === "") {
+      flushList();
+      continue;
+    }
+
+    const codeBlockMatch = trimmed.match(/^```(\w*)/);
+    if (codeBlockMatch) {
+      flushList();
+      const lang = codeBlockMatch[1];
+      let codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      elements.push(
+        <code key={key++} className="block bg-muted/60 rounded-lg px-3 py-2 text-xs font-mono my-2 overflow-x-auto">
+          {codeLines.join("\n")}
+        </code>
+      );
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+    if (headingMatch) {
+      flushList();
+      const level = headingMatch[1].length;
+      const Tag = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
+      const cls = level === 1 ? "text-base font-semibold mb-1 mt-2"
+        : level === 2 ? "text-sm font-semibold mb-1 mt-2"
+        : "text-sm font-semibold mb-1 mt-1";
+      elements.push(
+        <Tag key={key++} className={cls}><InlineMarkdown text={headingMatch[2]} /></Tag>
+      );
+      continue;
+    }
+
+    const hrMatch = trimmed.match(/^[-*_]{3,}$/);
+    if (hrMatch) {
+      flushList();
+      elements.push(<hr key={key++} className="border-border/40 my-2" />);
+      continue;
+    }
+
+    const blockquoteMatch = trimmed.match(/^>\s*(.*)/);
+    if (blockquoteMatch) {
+      flushList();
+      elements.push(
+        <blockquote key={key++} className="border-l-2 border-primary/40 pl-3 my-2 text-muted-foreground">
+          <InlineMarkdown text={blockquoteMatch[1]} />
+        </blockquote>
+      );
+      continue;
+    }
+
+    const liMatch = trimmed.match(/^[-*+]\s+(.*)/);
+    if (liMatch) {
+      inList = "ul";
+      listItems.push(
+        <li key={`li-${key++}`} className="leading-relaxed">
+          <InlineMarkdown text={liMatch[1]} />
+        </li>
+      );
+      continue;
+    }
+
+    flushList();
+
+    const olMatch = trimmed.match(/^\d+[.)]\s+(.*)/);
+    if (olMatch) {
+      elements.push(
+        <p key={key++} className="mb-2 last:mb-0">
+          <InlineMarkdown text={olMatch[1]} />
+        </p>
+      );
+      continue;
+    }
+
+    elements.push(
+      <p key={key++} className="mb-2 last:mb-0">
+        <InlineMarkdown text={line} />
+      </p>
+    );
+  }
+
+  flushList();
+
+  return <>{elements}</>;
+}
+
 function MessageContent({ content }: { content: string }) {
   if (typeof content !== "string" || content.length === 0) {
     return <p className="text-muted-foreground italic">(mensagem vazia)</p>;
   }
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-        strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-        em: ({ children }) => <em className="italic text-foreground/90">{children}</em>,
-        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5">{children}</ol>,
-        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
-        h1: ({ children }) => <h1 className="text-base font-semibold mb-1 mt-2">{children}</h1>,
-        h2: ({ children }) => <h2 className="text-sm font-semibold mb-1 mt-2">{children}</h2>,
-        h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 mt-1">{children}</h3>,
-        code: ({ children, className }) => {
-          const isBlock = className?.includes("language-");
-          return isBlock ? (
-            <code className="block bg-muted/60 rounded-lg px-3 py-2 text-xs font-mono my-2 overflow-x-auto">{children}</code>
-          ) : (
-            <code className="bg-muted/60 rounded px-1.5 py-0.5 text-xs font-mono">{children}</code>
-          );
-        },
-        blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-primary/40 pl-3 my-2 text-muted-foreground">{children}</blockquote>
-        ),
-        hr: () => <hr className="border-border/40 my-2" />,
-        a: ({ href, children }) => (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
-            {children}
-          </a>
-        ),
-      }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
+  return <SimpleMarkdown content={content} />;
 }
 
 function FileAttachmentPreview({ attachment }: { attachment: ChatMessage["fileAttachment"] }) {
